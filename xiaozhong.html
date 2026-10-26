@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#F9E9D3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="小众点评">
+  <title>小众点评 🐱</title>
+  <style>
+    :root {
+      --bg: #F9E9D3;
+      --card-bg: #FFFEF8;
+      --text: #5C4033;
+      --text-secondary: #8B6F5C;
+      --text-tertiary: #C4B5A0;
+      --border: #E8D5B8;
+      --border-light: #F5EBD8;
+      --separator: #F8F0E0;
+      --coral: #E8925A;
+      --coral-light: #FFF0E4;
+      --coral-dark: #D07840;
+      --peach: #F5A87A;
+      --peach-light: #FFF5EB;
+      --mint: #A8C890;
+      --mint-light: #F0F8E8;
+      --lavender: #B8A0C8;
+      --lavender-light: #F5F0F8;
+      --sky: #90B8C8;
+      --sky-light: #E8F5F8;
+      --yellow: #F5D888;
+      --yellow-light: #FFFBE8;
+      --cream: #F9E9D3;
+      --warm-gray: #B8A890;
+      --warm-gray-light: #F8F4F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .page { display: none; max-width: 430px; margin: 0 auto; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 头图 */
+    .hero-image-container { width: 100%; overflow: hidden; }
+    .hero-image { width: 100%; height: auto; display: block; }
+
+    /* 导航 */
+    .nav-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255, 248, 240, 0.95);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border-light);
+      padding: 16px 20px;
+    }
+    .nav-header h1 { font-size: 22px; font-weight: 700; color: var(--coral-dark); }
+    .nav-header .subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* 统计卡片 */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 16px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .stat-number { font-size: 28px; font-weight: 700; color: var(--coral-dark); margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-secondary); }
+
+    /* 菜品网格 */
+    .dish-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 16px 16px;
+    }
+    .dish-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .dish-card .photo-container {
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: var(--separator);
+      position: relative;
+    }
+    .dish-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dish-card .delete-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dish-card .info { padding: 12px; }
+    .dish-card .name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .dish-card .desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
+    .dish-card .meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); }
+    .dish-card .meta .calendar-icon { font-size: 12px; }
+
+    /* 底部导航 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border-light);
+      padding: 8px 0;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .nav-btn {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: var(--separator);
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav-btn.active {
+      background: var(--coral);
+      color: #fff;
+    }
+
+    /* 上传表单 */
+    .form-section { padding: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .photo-upload-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--coral);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .photo-preview {
+      width: 100%;
+      aspect-ratio: 3/4;
+      max-height: 380px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .photo-preview.has-image { border: none; }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-preview.placeholder { color: var(--text-secondary); font-size: 14px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: none;
+    }
+    .toast.show { display: block; }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    .empty-state .emoji { font-size: 64px; margin-bottom: 16px; }
+
+    /* 图片裁切弹窗 */
+    .crop-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.92);
+      display: none;
+      flex-direction: column;
+    }
+    .crop-modal.active { display: flex; }
+    .crop-header {
+      padding: 14px 20px;
+      padding-top: max(14px, env(safe-area-inset-top));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+    }
+    .crop-header button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .crop-header .crop-title { font-size: 16px; font-weight: 600; }
+    .crop-header .crop-done { font-weight: 600; color: #FF8C7A; }
+    .crop-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .crop-viewport {
+      position: relative;
+      overflow: hidden;
+      background: #222;
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+    }
+    .crop-viewport img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      max-width: none;
+      max-height: none;
+      display: block;
+    }
+    .crop-hint {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 13px;
+      padding: 0 20px 6px;
+    }
+    .crop-footer {
+      padding: 14px 20px calc(16px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 12px;
+    }
+    .crop-footer button {
+      flex: 1;
+      padding: 13px 18px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .crop-footer .crop-reset {
+      flex: 0 0 auto;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    .crop-footer .crop-confirm {
+      background: #FF8C7A;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+
+  <!-- 图片裁切弹窗 -->
+  <div class="crop-modal" id="cropModal">
+    <div class="crop-header">
+      <button onclick="closeCropModal()">取消</button>
+      <span class="crop-title">✂️ 裁切菜品图</span>
+      <button class="crop-done" onclick="confirmCrop()">完成</button>
+    </div>
+    <div class="crop-stage" id="cropStage">
+      <div class="crop-viewport" id="cropViewport">
+        <img id="cropImage" draggable="false" alt="">
+      </div>
+    </div>
+    <div class="crop-hint">单指拖动 · 双指缩放 · 双击放大/还原</div>
+    <div class="crop-footer">
+      <button class="crop-reset" onclick="resetCrop()">↺ 重置</button>
+      <button class="crop-confirm" onclick="confirmCrop()">✂️ 确认裁切</button>
+    </div>
+  </div>
+  <!-- 菜单图片预览弹窗 -->
+  <div id="menuPreviewModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; flex-direction: column;">
+    <img id="menuPreviewImg" style="max-width: 90%; max-height: 80%; border-radius: 16px; margin-bottom: 20px;">
+    <button onclick="closeMenuPreview()" style="padding: 12px 30px; background: #E8925A; color: #fff; border: none; border-radius: 20px; font-size: 16px; font-weight: 600;">关闭</button>
+  </div>
+
+  <!-- 上传页面 -->
+  <div class="page" id="page-upload">
+    <div class="hero-image-container">
+      <img class="hero-image" src="/header.jpg">
+    </div>
+    <div class="form-section">
+      <div class="form-group">
+        <label>照片</label>
+        <button class="photo-upload-btn" onclick="choosePhoto()">📤 上传菜品</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+        <div class="photo-preview" id="photoPreview">
+          <span class="placeholder">照片将在这里显示</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>菜名</label>
+        <input type="text" id="dishName" placeholder="给这道菜起个名字">
+      </div>
+      <div class="form-group">
+        <label>描述</label>
+        <textarea id="dishDesc" placeholder="味道怎么样？有什么特别之处？"></textarea>
+      </div>
+      <div class="form-group">
+        <label>日期</label>
+        <input type="date" id="dishDate">
+      </div>
+      <button class="photo-upload-btn" onclick="saveDish()">💾 保存菜品</button>
+    </div>
+  </div>
+
+  <!-- 菜品库页面 -->
+  <div class="page active" id="page-dishes">
+    <div class="nav-header">
+      <h1>🍽️ 菜品库</h1>
+      <div class="subtitle" id="dishCount">共 0 道菜</div>
+    </div>
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">总菜品</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statWeek">0</div>
+        <div class="stat-label">本周新增</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statMonth">0</div>
+        <div class="stat-label">本月新增</div>
+      </div>
+    </div>
+    <div class="dish-grid" id="dishGrid"></div>
+  </div>
+
+  <!-- 点餐页面 -->
+  <div class="page" id="page-order">
+    <div class="nav-header">
+      <h1>📋 点餐</h1>
+      <div class="subtitle">选择几道菜，生成菜单分享给大厨</div>
+    </div>
+    <div class="form-section">
+      <div id="orderList" style="padding-bottom: 80px;"></div>
+    </div>
+    <!-- 吸底生成菜单按钮 -->
+    <div style="position: fixed; bottom: 80px; left: 0; right: 0; padding: 0 16px; max-width: 430px; margin: 0 auto;">
+      <button class="photo-upload-btn" onclick="generateMenu()">📝 生成菜单</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="switchTab('upload')">上传菜品</button>
+    <button class="nav-btn active" onclick="switchTab('dishes')">菜品库</button>
+    <button class="nav-btn" onclick="switchTab('order')">点餐</button>
+  </nav>
+
+  <script>
+    const API_BASE = '/api';
+    let currentPhoto = null;
+    let allDishes = [];
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function closeMenuPreview() {
+      document.getElementById('menuPreviewModal').style.display = 'none';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + tab).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tab === 'dishes') { loadDishes(); renderDishes(); }
+      if (tab === 'order') { loadDishes(); renderOrder(); }
+      if (tab === 'upload') {
+        document.getElementById('dishDate').value = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    function choosePhoto() {
+      const input = document.getElementById('fileInput');
+      input.onchange = handlePhotoSelect;
+      input.click();
+    }
+
+    // ===== 图片裁切 =====
+    const CROP_OUTPUT_SIZE = 800;
+    let cropImg = null;
+    let cropNaturalW = 0, cropNaturalH = 0;
+    let cropScale = 1;
+    let cropX = 0, cropY = 0;
+    let cropViewportSize = 0;
+    let cropBaseScale = 1;
+    const cropTouches = new Map();
+    let cropLastPinchDist = 0;
+    let cropLastTapTime = 0;
+    let cropHadMultiTouch = false;  // 标记本次触摸是否出现过双指（区分双击和捏合抬手）
+    let cropMouseDown = false;
+    let cropMouseLast = null;
+
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = (err) => { URL.revokeObjectURL(url); reject(err); };
+        img.src = url;
+      });
+    }
+
+    function loadImageFromDataUrl(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    async function handlePhotoSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      e.target.value = '';
+
+      try {
+        // 先用 createImageBitmap 校正 EXIF 方向（手机拍照常见旋转问题）
+        let source;
+        if (window.createImageBitmap) {
+          source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        } else {
+          source = await loadImageFromFile(file);
+        }
+        const w = source.width || source.naturalWidth;
+        const h = source.height || source.naturalHeight;
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(source, 0, 0);
+        if (source.close) source.close();
+        const img = await loadImageFromDataUrl(canvas.toDataURL('image/jpeg', 0.9));
+        openCropModal(img);
+      } catch (err) {
+        console.error('图片加载失败', err);
+        showToast('图片加载失败，请换一张试试');
+      }
+    }
+
+    function openCropModal(img) {
+      cropImg = img;
+      cropNaturalW = img.naturalWidth;
+      cropNaturalH = img.naturalHeight;
+
+      const modal = document.getElementById('cropModal');
+      const viewport = document.getElementById('cropViewport');
+      const imageEl = document.getElementById('cropImage');
+
+      cropViewportSize = Math.min(window.innerWidth - 32, 360);
+      viewport.style.width = cropViewportSize + 'px';
+      viewport.style.height = cropViewportSize + 'px';
+
+      imageEl.src = img.src;
+      imageEl.style.width = cropNaturalW + 'px';
+      imageEl.style.height = cropNaturalH + 'px';
+
+      modal.classList.add('active');
+      requestAnimationFrame(resetCrop);
+    }
+
+    function closeCropModal() {
+      document.getElementById('cropModal').classList.remove('active');
+      cropImg = null;
+    }
+
+    function resetCrop() {
+      cropBaseScale = Math.max(cropViewportSize / cropNaturalW, cropViewportSize / cropNaturalH);
+      cropScale = cropBaseScale;
+      cropX = (cropViewportSize - cropNaturalW * cropScale) / 2;
+      cropY = (cropViewportSize - cropNaturalH * cropScale) / 2;
+      applyCropTransform();
+    }
+
+    function applyCropTransform() {
+      const imageEl = document.getElementById('cropImage');
+      imageEl.style.transform = `translate(${cropX}px, ${cropY}px) scale(${cropScale})`;
+    }
+
+    function clampCrop() {
+      const w = cropNaturalW * cropScale, h = cropNaturalH * cropScale, V = cropViewportSize;
+      if (w <= V) cropX = (V - w) / 2; else cropX = Math.min(0, Math.max(V - w, cropX));
+      if (h <= V) cropY = (V - h) / 2; else cropY = Math.min(0, Math.max(V - h, cropY));
+    }
+
+    function zoomCropAt(vx, vy, factor) {
+      const maxScale = cropBaseScale * 5;
+      const newScale = Math.min(maxScale, Math.max(cropBaseScale, cropScale * factor));
+      const realFactor = newScale / cropScale;
+      cropX = vx - (vx - cropX) * realFactor;
+      cropY = vy - (vy - cropY) * realFactor;
+      cropScale = newScale;
+      clampCrop();
+      applyCropTransform();
+    }
+
+    function getViewportRelativePoint(clientX, clientY) {
+      const stage = document.getElementById('cropStage');
+      const rect = stage.getBoundingClientRect();
+      const vx = clientX - rect.left - (rect.width - cropViewportSize) / 2;
+      const vy = clientY - rect.top - (rect.height - cropViewportSize) / 2;
+      return { vx, vy };
+    }
+
+    function initCropGestures() {
+      const stage = document.getElementById('cropStage');
+
+      stage.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (e.touches.length > 1) {
+          cropHadMultiTouch = true;
+          cropLastTapTime = 0; // 出现过双指后，禁止本次抬手触发双击
+        }
+        cropTouches.clear();
+        for (const t of e.touches) cropTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+        cropLastPinchDist = 0;
+      }, { passive: false });
+
+      stage.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+          const t = e.touches[0];
+          const prev = cropTouches.get(t.identifier) || { x: t.clientX, y: t.clientY };
+          cropX += t.clientX - prev.x;
+          cropY += t.clientY - prev.y;
+          cropTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+          clampCrop();
+          applyCropTransform();
+        } else if (e.touches.length === 2) {
+          const [t1, t2] = e.touches;
+          const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          if (cropLastPinchDist > 0) {
+            const mid = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+            const p = getViewportRelativePoint(mid.x, mid.y);
+            zoomCropAt(p.vx, p.vy, dist / cropLastPinchDist);
+          }
+          cropLastPinchDist = dist;
+          cropTouches.set(t1.identifier, { x: t1.clientX, y: t1.clientY });
+          cropTouches.set(t2.identifier, { x: t2.clientX, y: t2.clientY });
+        }
+      }, { passive: false });
+
+      stage.addEventListener('touchend', (e) => {
+        cropTouches.clear();
+        cropLastPinchDist = 0;
+        const now = Date.now();
+        // 双击缩放：仅当全程单指、且两次干净轻点时间间隔 < 300ms 时触发
+        // 捏合后的单指抬手（cropHadMultiTouch=true）不更新 tap 时间，避免被误判
+        if (!cropHadMultiTouch && now - cropLastTapTime < 300 && e.changedTouches.length === 1) {
+          const t = e.changedTouches[0];
+          const p = getViewportRelativePoint(t.clientX, t.clientY);
+          if (cropScale > cropBaseScale * 1.5) resetCrop();
+          else zoomCropAt(p.vx, p.vy, 2.2);
+        }
+        if (!cropHadMultiTouch) cropLastTapTime = now;
+        if (e.touches.length === 0) cropHadMultiTouch = false;
+      });
+
+      // iOS 系统打断手势（如来电、下拉通知栏）时清理状态，避免卡死
+      stage.addEventListener('touchcancel', () => {
+        cropTouches.clear();
+        cropLastPinchDist = 0;
+        cropHadMultiTouch = false;
+      });
+
+      stage.addEventListener('mousedown', (e) => {
+        cropMouseDown = true;
+        cropMouseLast = { x: e.clientX, y: e.clientY };
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!cropMouseDown) return;
+        cropX += e.clientX - cropMouseLast.x;
+        cropY += e.clientY - cropMouseLast.y;
+        cropMouseLast = { x: e.clientX, y: e.clientY };
+        clampCrop();
+        applyCropTransform();
+      });
+      window.addEventListener('mouseup', () => { cropMouseDown = false; });
+      stage.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const p = getViewportRelativePoint(e.clientX, e.clientY);
+        zoomCropAt(p.vx, p.vy, e.deltaY < 0 ? 1.12 : 0.9);
+      }, { passive: false });
+    }
+
+    function confirmCrop() {
+      if (!cropImg) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = CROP_OUTPUT_SIZE;
+      canvas.height = CROP_OUTPUT_SIZE;
+      const ctx = canvas.getContext('2d');
+      const sx = -cropX / cropScale;
+      const sy = -cropY / cropScale;
+      const sSize = cropViewportSize / cropScale;
+      ctx.drawImage(cropImg, sx, sy, sSize, sSize, 0, 0, CROP_OUTPUT_SIZE, CROP_OUTPUT_SIZE);
+      currentPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('photoPreview').innerHTML = '<img src="' + currentPhoto + '">';
+      document.getElementById('photoPreview').classList.add('has-image');
+      closeCropModal();
+    }
+
+    async function saveDish() {
+      const name = document.getElementById('dishName').value.trim();
+      const desc = document.getElementById('dishDesc').value.trim();
+      const date = document.getElementById('dishDate').value;
+
+      if (!currentPhoto) { showToast('请先选择照片'); return; }
+      if (!name) { showToast('请给菜起个名字'); return; }
+
+      try {
+        const res = await fetch(API_BASE + '/dishes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            review: desc,
+            photo: currentPhoto,
+            date: date || new Date().toISOString().split('T')[0]
+          })
+        });
+
+        if (!res.ok) throw new Error('保存失败');
+        const result = await res.json();
+        
+        showToast('✅ 保存成功');
+        currentPhoto = null;
+        document.getElementById('dishName').value = '';
+        document.getElementById('dishDesc').value = '';
+        document.getElementById('photoPreview').innerHTML = '<span class="placeholder">照片将在这里显示</span>';
+        document.getElementById('photoPreview').classList.remove('has-image');
+      } catch (e) {
+        showToast('❌ 保存失败：' + e.message);
+      }
+    }
+
+    async function loadDishes() {
+      try {
+        const res = await fetch(API_BASE + '/dishes');
+        if (!res.ok) throw new Error('加载失败');
+        allDishes = await res.json();
+        return allDishes;
+      } catch (e) {
+        console.error('加载数据失败:', e);
+        showToast('⚠️ 数据加载失败');
+        return [];
+      }
+    }
+
+    function renderDishes() {
+      const grid = document.getElementById('dishGrid');
+      const countLabel = document.getElementById('dishCount');
+      
+      // 更新统计
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      let weekCount = 0, monthCount = 0;
+      
+      allDishes.forEach(d => {
+        const dishDate = new Date(d.date);
+        if (dishDate >= weekAgo) weekCount++;
+        if (dishDate >= monthStart) monthCount++;
+      });
+
+      document.getElementById('statTotal').textContent = allDishes.length;
+      document.getElementById('statWeek').textContent = weekCount;
+      document.getElementById('statMonth').textContent = monthCount;
+      countLabel.textContent = '共 ' + allDishes.length + ' 道菜';
+
+      if (allDishes.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="emoji">🍽️</div><div>还没有菜品<br>先去上传一道菜吧</div></div>';
+        return;
+      }
+
+      grid.innerHTML = allDishes.map(dish => `
+        <div class="dish-card">
+          <div class="photo-container">
+            <img src="${dish.photo}" alt="${dish.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22>🍽️</text></svg>'">
+            <button class="delete-btn" onclick="deleteDish('${dish.id}')">×</button>
+          </div>
+          <div class="info">
+            <div class="name">${dish.name}</div>
+            <div class="desc">${dish.review || '暂无描述'}</div>
+            <div class="meta">
+              <span class="calendar-icon">📅</span>
+              <span>${dish.date || ''}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function deleteDish(id) {
+      if (!confirm('确定要删除这道菜吗？')) return;
+      
+      try {
+        const res = await fetch(API_BASE + '/dishes/' + id, { method: 'DELETE' });
+        if (!res.ok) throw new Error('删除失败');
+        showToast('✅ 已删除');
+        loadDishes();
+        renderDishes();
+      } catch (e) {
+        showToast('❌ 删除失败：' + e.message);
+      }
+    }
+
+    function renderOrder() {
+      const list = document.getElementById('orderList');
+      if (allDishes.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="emoji">📋</div><div>还没有菜品</div></div>';
+        return;
+      }
+
+      list.innerHTML = allDishes.map(dish => `
+        <div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--separator);">
+          <input type="checkbox" id="order-${dish.id}" value="${dish.id}" style="margin-right: 12px; width: 20px; height: 20px;">
+          <img src="${dish.photo}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 12px; margin-right: 12px;">
+          <label for="order-${dish.id}" style="flex: 1; cursor: pointer;">
+            <div style="font-weight: 600; color: var(--text);">${dish.name}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${dish.review || '暂无描述'}</div>
+          </label>
+        </div>
+      `).join('');
+    }
+
+    async function generateMenu() {
+      const selected = Array.from(document.querySelectorAll('#orderList input:checked')).map(cb => cb.value);
+      if (selected.length === 0) { showToast('请先选择菜品'); return; }
+      const dishes = allDishes.filter(d => selected.includes(d.id));
+
+      // 创建临时菜单DOM用于生成图片
+      const menuContainer = document.createElement('div');
+      menuContainer.style.cssText = `
+        width: 375px;
+        background: #FFFDF7;
+        padding: 30px 20px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        position: fixed;
+        left: -9999px;
+        top: 0;
+      `;
+      menuContainer.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 28px; font-weight: 700; color: #D07840; margin-bottom: 8px;">🍽️ 周末菜单</div>
+          <div style="font-size: 14px; color: #8B6F5C;">${new Date().getFullYear()}年${new Date().getMonth()+1}月${new Date().getDate()}日</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+          ${dishes.map(d => `
+            <div style="background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+              <div style="width: 100%; height: 140px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #F8F0E0;">
+                <img src="${d.photo}" style="min-width: 100%; min-height: 100%; object-fit: cover;">
+              </div>
+              <div style="padding: 8px; text-align: center;">
+                <div style="font-weight: 600; color: #5C4033; font-size: 14px; margin-bottom: 2px;">${d.name}</div>
+                <div style="font-size: 10px; color: #8B6F5C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${d.review || ''}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="text-align: center; font-size: 16px; font-weight: 500; color: #D07840;">😋 麻烦大厨啦！</div>
+      `;
+      document.body.appendChild(menuContainer);
+
+      try {
+        showToast('正在生成菜单图片...');
+        const canvas = await html2canvas(menuContainer, { scale: 2, useCORS: true });
+        const imgUrl = canvas.toDataURL('image/jpeg', 0.9);
+        
+        // 弹出预览，长按可以直接转发
+        const previewModal = document.getElementById('menuPreviewModal');
+        const previewImg = document.getElementById('menuPreviewImg');
+        previewImg.src = imgUrl;
+        previewModal.style.display = 'flex';
+
+        showToast('✅ 长按图片即可转发给大厨！');
+      } catch (e) {
+        // 生成图片失败就回退到复制文字
+        const menu = '📋 周末菜单\n\n' + dishes.map((d, i) => (i+1) + '. ' + d.name).join('\n');
+        navigator.clipboard.writeText(menu).then(() => {
+          showToast('✅ 菜单已复制，可以分享给大厨啦！');
+        }).catch(() => {
+          showToast('✅ 菜单已生成，请截图分享');
+        });
+      } finally {
+        document.body.removeChild(menuContainer);
+      }
+    }
+
+    // 引入html2canvas生成图片
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    document.head.appendChild(script);
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('dishDate').value = new Date().toISOString().split('T')[0];
+      initCropGestures();
+      // 默认加载菜品库数据
+      await loadDishes();
+      renderDishes();
+    });
+  </script>
+</body>
+</html>

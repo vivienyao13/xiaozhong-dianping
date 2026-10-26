@@ -1,0 +1,16 @@
+{
+  "name": "xiaozhong-dianping",
+  "version": "1.0.0",
+  "description": "小众点评 - 个人美食记录工具（拍照 + 评分 + 标签 + 搜索）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "pg": "^8.21.0"
+  }
+}

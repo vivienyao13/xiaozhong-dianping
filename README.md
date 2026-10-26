@@ -18,6 +18,12 @@
 |---|---|---|
 | ![上传菜品](docs/screenshots/1-upload.jpg) | ![菜品库](docs/screenshots/2-library.jpg) | ![点餐](docs/screenshots/3-order.jpg) |
 
+点餐选好菜后，一键生成菜单卡片，直接分享给家里的大厨：
+
+| 生成的菜单 |
+|---|
+| ![周末菜单](docs/screenshots/4-menu.jpg) |
+
 ## 运行
 
 需要 Node.js 和 PostgreSQL，详细步骤见 [部署说明](部署说明.md)。
